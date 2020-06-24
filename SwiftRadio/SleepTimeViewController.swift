@@ -20,6 +20,21 @@ class SleepTimeViewController: UIViewController,UITextFieldDelegate {
     @IBOutlet weak var TextField: UITextField!
     override func viewDidLoad() {
         super.viewDidLoad()
+        if Constants.HoldingSomeValue != 0{
+            UIView.animate(withDuration: 60) {
+                self.timerProgress.value = CGFloat(Constants.HoldingSomeValue / 30)
+            }
+        }
+        }
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(true)
+        Constants.HoldingSomeValue = timeLeft
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+        
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(true)
         let tap = UITapGestureRecognizer(target: self, action: #selector(taped))
         bacjgroundImage.addGestureRecognizer(tap)
         NotificationCenter.default.addObserver(self, selector: #selector(KeyboardWillShow), name: UIResponder.keyboardWillShowNotification, object: nil)
@@ -58,34 +73,30 @@ class SleepTimeViewController: UIViewController,UITextFieldDelegate {
         }
 
     }
-       override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(true)
-        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
-        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
-    }
+
     @IBAction func startTimer(_ sender: UIButton) {
      
         if textfieldfortime.text != "" {
         textfieldfortime.endEditing(true)
-            timeLeft = Int(textfieldfortime.text!)!
+        timeLeft = Int(textfieldfortime.text!)! * 60
+        print(timeLeft)
          timer = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(fire), userInfo: nil, repeats: true)
         }
+        UIView.animate(withDuration: 60) {
+                             self.timerProgress.value = CGFloat(self.timeLeft / 30)
+             }
 
-    }
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(true)
     }
     
     @objc func fire()
     {
+        print(timeLeft)
         timeLeft -= 1
         if timeLeft <= 0 {
             timer?.invalidate()
             radioPlayer.player.stop()
             timer = nil
-        }
-        UIView.animate(withDuration: 60) {
-            self.timerProgress.value = CGFloat(self.timeLeft)
+            print("stop")
         }
     }
            
@@ -116,14 +127,6 @@ class SleepTimeViewController: UIViewController,UITextFieldDelegate {
             }
         }
     }
-    
-  
-
-//    timerRing.pauseTimer() // pauses the timer
-//
-//    timerRing.continueTimer() // continues from where we paused
-//
-//    timerRing.resetTimer() // resets and cancels animations previously running
 
     /*
     // MARK: - Navigation

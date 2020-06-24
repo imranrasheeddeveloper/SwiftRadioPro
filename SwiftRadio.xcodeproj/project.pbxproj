@@ -12,6 +12,7 @@
 		4FE427BC24A210CA00ACEA88 /* MenuCollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE427BB24A210CA00ACEA88 /* MenuCollectionViewCell.swift */; };
 		4FE427C024A2119200ACEA88 /* MenuViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE427BF24A2119200ACEA88 /* MenuViewController.swift */; };
 		4FE427C224A2217200ACEA88 /* SleepTimeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE427C124A2217200ACEA88 /* SleepTimeViewController.swift */; };
+		4FE69ACB24A294E5001E1CE1 /* Model.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 4FE69AC924A294E5001E1CE1 /* Model.xcdatamodeld */; };
 		53113F39230C720900462C0E /* ShareImageGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53113F38230C720900462C0E /* ShareImageGenerator.swift */; };
 		5F22BA3C1F72AD5A00CB5911 /* SpringLabel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F22BA1E1F72AD3700CB5911 /* SpringLabel.swift */; };
 		5F22BA3D1F72AD5A00CB5911 /* BlurView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F22BA1F1F72AD3900CB5911 /* BlurView.swift */; };
@@ -91,6 +92,7 @@
 		4FE427BB24A210CA00ACEA88 /* MenuCollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuCollectionViewCell.swift; sourceTree = "<group>"; };
 		4FE427BF24A2119200ACEA88 /* MenuViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuViewController.swift; sourceTree = "<group>"; };
 		4FE427C124A2217200ACEA88 /* SleepTimeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepTimeViewController.swift; sourceTree = "<group>"; };
+		4FE69ACA24A294E5001E1CE1 /* Model.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Model.xcdatamodel; sourceTree = "<group>"; };
 		53113F38230C720900462C0E /* ShareImageGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareImageGenerator.swift; sourceTree = "<group>"; };
 		5F22BA1E1F72AD3700CB5911 /* SpringLabel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpringLabel.swift; sourceTree = "<group>"; };
 		5F22BA1F1F72AD3900CB5911 /* BlurView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlurView.swift; sourceTree = "<group>"; };
@@ -275,6 +277,7 @@
 				9409E1191ABF6FEA00312E2B /* Supporting Files */,
 				94D260941B45E0BA00DE671C /* UI Helpers */,
 				5F22B9DE1F72A8D800CB5911 /* Libraries */,
+				4FE69AC924A294E5001E1CE1 /* Model.xcdatamodeld */,
 			);
 			path = SwiftRadio;
 			sourceTree = "<group>";
@@ -601,6 +604,7 @@
 				94D30EA71AD07A880024FE96 /* StationTableViewCell.swift in Sources */,
 				5F22BA3C1F72AD5A00CB5911 /* SpringLabel.swift in Sources */,
 				5F22BA3D1F72AD5A00CB5911 /* BlurView.swift in Sources */,
+				4FE69ACB24A294E5001E1CE1 /* Model.xcdatamodeld in Sources */,
 				53113F39230C720900462C0E /* ShareImageGenerator.swift in Sources */,
 				5F22BA411F72AD5A00CB5911 /* SpringTextField.swift in Sources */,
 				9409E1401ABF78B000312E2B /* NowPlayingViewController.swift in Sources */,
@@ -877,6 +881,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		4FE69AC924A294E5001E1CE1 /* Model.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				4FE69ACA24A294E5001E1CE1 /* Model.xcdatamodel */,
+			);
+			currentVersion = 4FE69ACA24A294E5001E1CE1 /* Model.xcdatamodel */;
+			path = Model.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 9409E10E1ABF6FE900312E2B /* Project object */;
 }

@@ -9,11 +9,36 @@
 import UIKit
 import MediaPlayer
 import AVFoundation
-
-class StationsViewController: UIViewController {
-    
+import CoreData
+class StationsViewController: UIViewController, UIGestureRecognizerDelegate {
+    var history = [NSManagedObject]()
+    var fvrStringTitleArray : [String] = []
+    @IBOutlet weak var segmentedControl: UISegmentedControl!
+    var segment : Bool = true
+    @IBAction func indexChanged(_ sender: UISegmentedControl) {
+        switch segmentedControl.selectedSegmentIndex {
+            
+           case 0:
+            segment = true
+            DispatchQueue.main.async {
+                self.loadStationsFromJSON()
+                self.tableView.reloadData()
+            }
+            
+        case 1:
+            segment = false
+            DispatchQueue.main.async {
+                self.loadStationsFromJSON()
+                self.tableView.reloadData()
+            }
+           default:
+               break;
+           }
+    }
     // MARK: - IB UI
-
+    // MARK: Variables declearations
+       let appDelegate = UIApplication.shared.delegate as! AppDelegate //Singlton instance
+       var context:NSManagedObjectContext!
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var stationNowPlayingButton: UIButton!
     @IBOutlet weak var nowPlayingAnimationImageView: UIImageView!
@@ -61,6 +86,8 @@ class StationsViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        //deleteAllRecords()
+        fetchData()
         Constants.addBannerViewToView(viewController: self)
         // Register 'Nothing Found' cell xib
         let cellNib = UINib(nibName: "NothingFoundCell", bundle: nil)
@@ -158,13 +185,14 @@ class StationsViewController: UIViewController {
     //*****************************************************************
     
     func loadStationsFromJSON() {
+        stations.removeAll()
         
         // Turn on network indicator in status bar
         UIApplication.shared.isNetworkActivityIndicatorVisible = true
         
         // Get the Radio Stations
         DataManager.getStationDataWithSuccess() { (data) in
-            
+            self.stations.removeAll()
             // Turn off network indicator in status bar
             defer {
                 DispatchQueue.main.async { UIApplication.shared.isNetworkActivityIndicatorVisible = false }
@@ -172,12 +200,26 @@ class StationsViewController: UIViewController {
             
             if kDebugLog { print("Stations JSON Found") }
             
-            guard let data = data, let jsonDictionary = try? JSONDecoder().decode([String: [RadioStation]].self, from: data), let stationsArray = jsonDictionary["station"] else {
+            guard let data = data, let jsonDictionary = try? JSONDecoder().decode([String: [RadioStation]].self, from: data), var stationsArray = jsonDictionary["station"] else {
                 if kDebugLog { print("JSON Station Loading Error") }
                 return
             }
-            
+       
             self.stations = stationsArray
+            stationsArray.removeAll()
+            if self.segment == false{
+            for obj in self.fvrStringTitleArray{
+                print(obj)
+                if let index = self.stations.firstIndex(where: {$0.name == obj}) // Search id = 1 you can set any value
+               {
+                self.stations.remove(at: index)
+               }
+            }
+                dump(self.stations)
+
+                print(self.stations.count)
+         }
+            dump(self.stations)
         }
     }
     
@@ -194,7 +236,8 @@ class StationsViewController: UIViewController {
         
         if let indexPath = (sender as? IndexPath) {
             // User clicked on row, load/reset station
-            radioPlayer.station = searchController.isActive ? searchedStations[indexPath.row] : stations[indexPath.row]
+            radioPlayer.station = stations[indexPath.row]
+           // searchController.isActive ? searchedStations[indexPath.row] :
             newStation = radioPlayer.station != previousStation
             previousStation = radioPlayer.station
         } else {
@@ -330,11 +373,13 @@ extension StationsViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        if searchController.isActive {
-            return searchedStations.count
-        } else {
+//        if searchController.isActive {
+//
+//            return searchedStations.count
+//        }
+//        else {
             return stations.isEmpty ? 1 : stations.count
-        }
+//        }
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -350,12 +395,31 @@ extension StationsViewController: UITableViewDataSource {
             
             // alternate background color
             cell.backgroundColor = (indexPath.row % 2 == 0) ? UIColor.clear : UIColor.black.withAlphaComponent(0.2)
-            
-            let station = searchController.isActive ? searchedStations[indexPath.row] : stations[indexPath.row]
+            cell.favImage.isUserInteractionEnabled = true
+            print(stations.count)
+            let station = stations[indexPath.row]
+            //searchController.isActive ? searchedStations[indexPath.row] :
             cell.configureStationCell(station: station)
-            
+            if segment == true{
+                if stations[indexPath.row].name == SearchbyName(number: station.name){
+                  cell.favImage.image = UIImage(named: "fillHeart")
+                }
+                else{
+                    cell.favImage.image = UIImage(named: "heart")
+                    
+                }
+           
+            }
+            else{
+                cell.favImage.image = UIImage(named: "fillHeart")
+            }
+            let tap = UIGestureRecognizer(target: self, action: #selector(StationsViewController.tapped(_:)))
+            cell.favImage.addGestureRecognizer(tap)
             return cell
         }
+    }
+    @objc func tapped(_ sender:AnyObject){
+        print("tappedonImage")
     }
 }
 
@@ -365,10 +429,87 @@ extension StationsViewController: UITableViewDataSource {
 
 extension StationsViewController: UITableViewDelegate {
     
+    
+     func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath) -> [UITableViewRowAction]? {
+        var delete : UITableViewRowAction! = nil
+        if segment == false{
+            delete = UITableViewRowAction(style: .destructive, title: "Delete") { (action, indexPath) in
+                self.deleteObject(name: self.stations[indexPath.row].name)
+                tableView.reloadData()
+              }
+       
+        }
+        else{
+            delete = UITableViewRowAction(style: .normal, title: "Favourties") { (action, indexPath) in
+                         
+            let currentCell = tableView.cellForRow(at: indexPath) as! StationTableViewCell
+                if self.Search(number: currentCell.stationNameLabel.text!) != 0{print("number Already Exist")}
+             else{
+            let appDelegate = UIApplication.shared.delegate as? AppDelegate
+            let managedContext = appDelegate!.persistentContainer.viewContext
+             let entity =
+                 NSEntityDescription.entity(forEntityName: "Entity",
+                                            in: managedContext)!
+             
+             let fvr = NSManagedObject(entity: entity,
+                                       insertInto: managedContext)
+             
+            
+             fvr.setValue(currentCell.stationNameLabel.text , forKey: "name")
+             
+             do {
+                 try managedContext.save()
+                self.history.append(fvr)
+             } catch let error as NSError {
+                 print("Could not save. \(error), \(error.userInfo)")
+             }
+             }
+            }
+        }
+
+         return [delete]
+     }
+    
+    func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if segment == false{
+        deleteObject(name: stations[indexPath.row].name)
+        tableView.reloadData()
+        }
+        else{
+            let currentCell = tableView.cellForRow(at: indexPath) as! StationTableViewCell
+             if Search(number: currentCell.stationNameLabel.text!) != 0{print("number Already Exist")}
+             else{
+             guard let appDelegate =
+                 UIApplication.shared.delegate as? AppDelegate else {
+                     return
+             }
+             let managedContext = appDelegate.persistentContainer.viewContext
+             let entity =
+                 NSEntityDescription.entity(forEntityName: "Entity",
+                                            in: managedContext)!
+             
+             let fvr = NSManagedObject(entity: entity,
+                                       insertInto: managedContext)
+             
+            
+             fvr.setValue(currentCell.stationNameLabel.text , forKey: "name")
+             
+             do {
+                 try managedContext.save()
+                 history.append(fvr)
+             } catch let error as NSError {
+                 print("Could not save. \(error), \(error.userInfo)")
+             }
+             }
+        }
+         
+    }
+    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         tableView.deselectRow(at: indexPath, animated: true)
         performSegue(withIdentifier: "NowPlaying", sender: indexPath)
+        
     }
 }
 
@@ -515,5 +656,125 @@ extension StationsViewController: NowPlayingViewControllerDelegate {
             // If nowPlayingVC is not presented (change from remote controls)
             radioPlayer.player.radioURL = URL(string: station.streamURL)
         }
+    }
+    
+    func fetchData()
+     {
+         print("Fetching Data..")
+         let appDelegate = UIApplication.shared.delegate as! AppDelegate
+         let context = appDelegate.persistentContainer.viewContext
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Entity")
+         request.returnsObjectsAsFaults = false
+        
+            
+         do {
+             let result = try context.fetch(request)
+             for data in result as! [NSManagedObject] {
+                 let fvrtitle = data.value(forKey: "name") as! String
+                fvrStringTitleArray.append(fvrtitle)
+                 print(fvrtitle)
+             }
+         } catch {
+             print("Fetching data Failed")
+         }
+     }
+    func Search(number: String) -> Int
+    {
+        var count: Int = 0
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        let context = appDelegate.persistentContainer.viewContext
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Entity")
+        let searchString = number
+        request.predicate = NSPredicate(format: "name == %@", searchString)
+        do {
+            let result = try context.fetch(request)
+            if result.count > 0 {
+                for online in result {
+                    _ = (online as AnyObject).value(forKey: "name") as? String
+                }
+                count = result.count
+            } else {
+                
+            }
+         
+        } catch {
+            print(error)
+        }
+        
+        return count
+    }
+    
+    func deleteObject(name: String){
+    let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        let context = appDelegate.persistentContainer.viewContext
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Entity")
+        let searchString = name
+        request.predicate = NSPredicate(format: "name == %@", searchString)  // equal
+        do {
+            let result = try context.fetch(request)
+            if result.count > 0 {
+                // Delete _all_ objects:
+                for object in result {
+                    context.delete(object as! NSManagedObject)
+                    stations.removeAll(where: { $0.name == name })
+                }
+                
+                // Or delete first object:
+                if result.count > 0 {
+                    context.delete(result[0] as! NSManagedObject)
+                }
+                try context.save()
+                DispatchQueue.main.async {
+                    self.loadStationsFromJSON()
+                    self.tableView.reloadData()
+                }
+                
+            } else {
+                
+            }
+            
+        } catch {
+            print(error)
+        }
+    }
+    
+    func deleteAllRecords() {
+        let delegate = UIApplication.shared.delegate as! AppDelegate
+        let context = delegate.persistentContainer.viewContext
+
+        let deleteFetch = NSFetchRequest<NSFetchRequestResult>(entityName: "Entity")
+        let deleteRequest = NSBatchDeleteRequest(fetchRequest: deleteFetch)
+
+        do {
+            try context.execute(deleteRequest)
+            try context.save()
+        } catch {
+            print ("There was an error")
+        }
+    }
+    func SearchbyName(number: String) -> String
+    {
+        var name : String?
+        var count: Int = 0
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        let context = appDelegate.persistentContainer.viewContext
+        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "Entity")
+        let searchString = number
+        request.predicate = NSPredicate(format: "name == %@", searchString)
+        do {
+            let result = try context.fetch(request)
+            if result.count > 0 {
+                for online in result {
+                    name = (online as AnyObject).value(forKey: "name") as? String
+                }
+              
+            } else {
+                name = "Nothing"
+            }
+         
+        } catch {
+            print(error)
+        }
+          return name!
     }
 }

@@ -12,12 +12,13 @@ import GoogleMobileAds
 struct Constants {
     
     
+    
+   public static var HoldingSomeValue = 0
     // Test
     static let bannarId : String = "ca-app-pub-3940256099942544/2934735716"
     static let interstitialId : String = "ca-app-pub-3940256099942544/4411468910"
     static let appId : String = "ca-app-pub-3940256099942544~1458002511"
         
-    
     
     static func addBannerViewToView(viewController: UIViewController) {
          let bannerView = GADBannerView(adSize: kGADAdSizeBanner)
